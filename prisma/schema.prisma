@@ -1,0 +1,215 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  clerkId      String        @unique
+  email        String        @unique
+  name         String?
+  imageUrl     String?
+  role         UserRole      @default(USER)
+  plan         Plan          @default(FREE)
+  credits      Int           @default(100)
+  niche        String?
+  platforms    String[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  scripts      Script[]
+  videos       Video[]
+  voiceovers   Voiceover[]
+  analytics    Analytics[]
+  exports      Export[]
+  subscription Subscription?
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  plan                 Plan      @default(FREE)
+  status               String    @default("active")
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Script {
+  id           String       @id @default(cuid())
+  userId       String
+  niche        String
+  topic        String
+  tone         String       @default("energetic")
+  audience     String?
+  style        ContentStyle @default(STORYTELLING)
+  platform     String       @default("tiktok")
+  hook         String
+  body         String       @db.Text
+  cta          String
+  hashtags     String[]
+  title        String
+  captions     String       @db.Text
+  viralScore   Int          @default(0)
+  retentionScore Int        @default(0)
+  engagementScore Int       @default(0)
+  duration     String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos   Video[]
+  voiceovers Voiceover[]
+
+  @@index([userId])
+}
+
+model Video {
+  id          String      @id @default(cuid())
+  userId      String
+  scriptId    String?
+  title       String
+  platform    String      @default("tiktok")
+  style       String      @default("cinematic")
+  status      VideoStatus @default(PENDING)
+  thumbnail   String?
+  url         String?
+  duration    Int?
+  views       Int         @default(0)
+  likes       Int         @default(0)
+  shares      Int         @default(0)
+  comments    Int         @default(0)
+  viralScore  Int         @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  script Script? @relation(fields: [scriptId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Voiceover {
+  id          String   @id @default(cuid())
+  userId      String
+  scriptId    String?
+  voiceId     String
+  voiceName   String
+  gender      String   @default("female")
+  tone        String   @default("natural")
+  language    String   @default("en")
+  url         String?
+  duration    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  script Script? @relation(fields: [scriptId], references: [id])
+
+  @@index([userId])
+}
+
+model Analytics {
+  id             String   @id @default(cuid())
+  userId         String
+  date           DateTime @default(now())
+  platform       String
+  views          Int      @default(0)
+  likes          Int      @default(0)
+  comments       Int      @default(0)
+  shares         Int      @default(0)
+  watchTime      Int      @default(0)
+  engagement     Float    @default(0)
+  retention      Float    @default(0)
+  ctr            Float    @default(0)
+  followers      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+model TrendData {
+  id               String   @id @default(cuid())
+  title            String
+  description      String   @db.Text
+  platform         String
+  trendScore       Int      @default(0)
+  competitionLevel String   @default("medium")
+  viralPotential   Int      @default(0)
+  hashtags         String[]
+  growth           Float    @default(0)
+  niche            String?
+  category         String?
+  createdAt        DateTime @default(now())
+
+  @@index([platform])
+  @@index([trendScore])
+}
+
+model Export {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  platform  String
+  status    String   @default("pending")
+  url       String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  CREATOR_PRO
+  TEAM
+}
+
+enum Plan {
+  FREE
+  CREATOR
+  PRO
+  AGENCY
+}
+
+enum ContentStyle {
+  STORYTELLING
+  EDUCATIONAL
+  CONTROVERSIAL
+  MOTIVATIONAL
+  CINEMATIC
+  MEME
+  LISTICLE
+  DOCUMENTARY
+}
+
+enum VideoStatus {
+  PENDING
+  GENERATING
+  COMPLETED
+  FAILED
+}
