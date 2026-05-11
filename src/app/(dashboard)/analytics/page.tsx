@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
                 <YAxis tick={{ fill: "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={formatNumber} />
                 <Tooltip
                   contentStyle={{ background: "#111113", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "8px", color: "#fafafa", fontSize: "12px" }}
-                  formatter={(v) => [formatNumber(Number(v)), String(v)]}
+                  formatter={(v, name) => [formatNumber(Number(v)), name === "views" ? "Views" : "Followers"]}
                 />
                 <Area type="monotone" dataKey="views" stroke="#a855f7" strokeWidth={2} fill="url(#viewsGrad)" />
                 <Area type="monotone" dataKey="followers" stroke="#22c55e" strokeWidth={2} fill="url(#followersGrad)" />
